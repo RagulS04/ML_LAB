@@ -1,0 +1,1125 @@
+Find-s 
+
+import csv
+num_attributes = 6
+a = []
+print("\n The Given Training Data Set \n")
+with open('../datasets/enjoysport.csv', 'r') as csvfile:
+ reader = csv.reader(csvfile)
+ for row in reader:
+    a.append (row)
+    print(row)
+print("\n The initial value of hypothesis: ")
+hypothesis = ['0'] * num_attributes
+print(hypothesis)
+for j in range(0,num_attributes):
+    hypothesis[j] = a[0][j];
+
+print(hypothesis)
+
+print("\n Find S: Finding a Maximally Specific Hypothesis\n")
+for i in range(0,len(a)):
+    if a[i][num_attributes]=='yes':
+        for j in range(0,num_attributes):
+            if a[i][j]!=hypothesis[j]:
+                hypothesis[j]='?'
+            else :
+                hypothesis[j]= a[i][j]
+    print(" For Training instance No:{0} the hypothesis is".format(i),hypothesis)
+
+print("\n The Maximally Specific Hypothesis for a given TrainingExamples :\n")
+print(hypothesis)
+
+
+===========================================================
+
+Candidate
+
+import numpy as np
+import pandas as pd
+
+data = pd.DataFrame(data=pd.read_csv('training_data.csv'))
+
+concepts = np.array(data.iloc[:,0:-1])
+print(concepts)
+
+target = np.array(data.iloc[:,-1])
+print(target)
+
+
+def learn(concepts, target):
+    
+    specific_h = concepts[0].copy()
+    print("\nInitialize specific_h and general_h")
+
+    general_h = [["?" for i in range(len(specific_h))] for i in range(len(specific_h))]
+
+    for i, h in enumerate(concepts):
+
+        if target[i] == "Yes":
+            for x in range(len(specific_h)):
+
+                if h[x] != specific_h[x]:
+                    general_h[x][x] = '?'
+                    specific_h[x] = '?'
+                    
+        if target[i] == "No":
+            for x in range(len(specific_h)):
+                if h[x] != specific_h[x]:
+                    general_h[x][x] = specific_h[x]
+                else:
+                    general_h[x][x] = '?'
+
+        
+    
+    indices = [i for i, val in enumerate(general_h) if val == ['?', '?', '?', '?', '?', '?']]
+    
+    for i in indices:
+        general_h.remove(['?', '?', '?', '?', '?', '?'])
+        
+    return specific_h, general_h
+
+s_final, g_final = learn(concepts, target)
+print("\nFinal Specific_h:", s_final, sep="\n")
+print("\nFinal General_h:", g_final, sep="\n")
+
+====================================================
+
+SLP
+
+
+import pandas as pd
+import numpy as np
+
+class Perceptron:
+    def __init__(self):
+        self.weights = None
+        self.bias = 0
+        
+    def initialize(self,n_features):
+        self.weights = np.zeros(n_features)
+        self.bias = 0
+        return
+    
+    def predict(self,inputs):
+        activation = np.dot(inputs, self.weights) + self.bias
+        return 1 if activation > 0 else 0
+    
+    def train(self, X, y, epochs=100, learning_rate=0.1):
+        self.initialize(X.shape[1])
+        for epoch in range(epochs):
+            for inputs, label in zip(X,y):
+                y_pred = self.predict(inputs)
+                error = label - y_pred
+                self.weights += learning_rate * error * inputs
+                self.bias += learning_rate * error
+        return
+
+X_train = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y_train = np.array([0, 0, 0, 1])
+
+p = Perceptron()
+p.train(X_train, y_train, epochs=100, learning_rate=0.1)
+test_input = np.array([0, 0])
+print(p.predict(test_input))  # Output: 0
+
+# OR
+X_train = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y_train = np.array([0, 1, 1, 1])
+
+p = Perceptron()
+p.train(X_train, y_train, epochs=100, learning_rate=0.1)
+test_input = np.array([0, 1])
+print(p.predict(test_input))  # Output: 1
+
+
+#OR Single Layer Perceptron
+
+import numpy as np
+
+class Perceptron:
+    def __init__(self, N, alpha=0.1):
+        self.W =np.random.randn(N+1)/np.sqrt(N)
+        self.alpha = alpha
+        print("Initial weight : ",self.W)
+        
+    def step(self, X):
+        return 1 if X > 0 else 0
+    
+    def fit(self, X, y , epochs = 10):
+        X=np.c_[X, np.ones((X.shape[0]))]
+        
+        for epoch in np.arange(0, epochs):
+            for (x, target) in zip(X,y):
+                p=self.step(np.dot(x, self.W))
+                if p!=target:
+                    error=p-target
+                    self.W += - self.alpha * error * x
+                    print(self.W)
+                    
+    def predict(self, X, addBias=True):
+        X = np.atleast_2d(X)
+        if addBias:
+            X = np.c_[X, np.ones((X.shape[0]))]
+        return self.step(np.dot(X, self.W))
+
+import numpy as np
+# construct the OR dataset
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y = np.array([[0], [1], [1], [1]])
+# define our perceptron and train it
+print("[INFO] training perceptron...")
+p = Perceptron(X.shape[1], alpha=0.1)
+p.fit(X, y, epochs=20)
+
+print("[INFO] testing perceptron...")
+# now that our network is trained, loop over the data points
+for (x, target) in zip(X, y):
+    pred = p.predict(x)
+    print("[INFO] data={}, ground-truth={}, pred={}".format(x, target[0], pred))
+
+print(p.W)
+
+
+#AND Single Layer Perceptron
+
+import numpy as np
+
+class Perceptron:
+    def __init__(self, N, alpha=0.1):
+        self.W =np.random.randn(N+1)/np.sqrt(N)
+        self.alpha = alpha
+        print("Initial weight : ",self.W)
+        
+    def step(self, X):
+        return 1 if X > 0 else 0
+    
+    def fit(self, X, y , epochs = 10):
+        X=np.c_[X, np.ones((X.shape[0]))]
+        
+        for epoch in np.arange(0, epochs):
+            for (x, target) in zip(X,y):
+                p=self.step(np.dot(x, self.W))
+                if p!=target:
+                    error=p-target
+                    self.W += - self.alpha * error * x
+                    
+    def predict(self, X, addBias=True):
+        X = np.atleast_2d(X)
+        if addBias:
+            X = np.c_[X, np.ones((X.shape[0]))]
+        return self.step(np.dot(X, self.W))
+
+import numpy as np
+# construct the AND dataset
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y = np.array([[0], [0], [0], [1]])
+# define our perceptron and train it
+print("[INFO] training perceptron...")
+p = Perceptron(X.shape[1], alpha=0.1)
+p.fit(X, y, epochs=20)
+
+print("[INFO] testing perceptron...")
+# now that our network is trained, loop over the data points
+for (x, target) in zip(X, y):
+    pred = p.predict(x)
+    print("[INFO] data={}, ground-truth={}, pred={}".format(x, target[0], pred))
+
+print(p.W)
+
+
+#XOR MultiLayer Perceptron
+
+import numpy as np
+
+def sigmoid(x):
+	return 1.0/(1.0 + np.exp(-x))
+
+def sigmoid_der(x):
+	return x*(1.0 - x)
+
+class NN:
+    def __init__(self, inputs):
+        self.inputs = inputs
+        self.l=len(self.inputs)
+        self.li=len(self.inputs[0])
+
+        self.wi=np.random.random((self.li, self.l))
+        self.wh=np.random.random((self.l, 1))
+
+    def think(self, inp):
+        s1=sigmoid(np.dot(inp, self.wi))
+        s2=sigmoid(np.dot(s1, self.wh))
+        return s2
+
+    def train(self, inputs,outputs, it):
+        for i in range(it):
+            l0=inputs
+            l1=sigmoid(np.dot(l0, self.wi))
+            l2=sigmoid(np.dot(l1, self.wh))
+
+            l2_err=outputs - l2
+            l2_delta = np.multiply(l2_err, sigmoid_der(l2))
+
+            l1_err=np.dot(l2_delta, self.wh.T)
+            l1_delta=np.multiply(l1_err, sigmoid_der(l1))
+
+            self.wh+=np.dot(l1.T, l2_delta)
+            self.wi+=np.dot(l0.T, l1_delta)
+
+inputs=np.array([[0,0], [0,1], [1,0], [1,1] ])
+outputs=np.array([ [0], [1],[1],[0] ])
+
+n=NN(inputs)
+print("Before Training")
+print(n.think(inputs))
+n.train(inputs, outputs, 100000)
+print("After Training")
+print(n.think(inputs))
+
+
+#3) Single Layer Perceptron for given weights
+import numpy as np
+
+class Perceptron:
+    def __init__(self, N, alpha=0.1):
+        self.W =[.75,.5,-.6]
+        self.alpha = alpha
+        print("Initial weight : ",self.W)
+        
+    def step(self, X):
+        return 1 if X >= 0 else -1
+    
+    def fit(self, X, y , epochs = 10):
+        X=np.c_[np.ones((X.shape[0])), X]
+        
+        for epoch in np.arange(0, epochs):
+            for (x, target) in zip(X,y):
+                p=self.step(np.dot(x, self.W))
+                if p!=target:
+                    error=p-target
+                    self.W += - self.alpha * error * x
+                    print(self.W)
+                    
+    def predict(self, X, addBias=True):
+        X = np.atleast_2d(X)
+        if addBias:
+            X = np.c_[np.ones((X.shape[0])), X]
+        return self.step(np.dot(X, self.W))
+
+import numpy as np
+# construct the OR dataset
+X = np.array([[7, 7], [2.8, 0.8], [1.2, 3], [7.8, 6.1]])
+y = np.array([[-1], [1], [1], [-1]])
+# define our perceptron and train it
+print("[INFO] training perceptron...")
+p = Perceptron(X.shape[1], alpha=0.2)
+p.fit(X, y, epochs=4)
+
+print("[INFO] testing perceptron...")
+# now that our network is trained, loop over the data points
+for (x, target) in zip(X, y):
+    pred = p.predict(x)
+    print("[INFO] data={}, ground-truth={}, pred={}".format(x, target[0],pred))
+
+print(p.W)
+
+
+#5) Single Layer Perceptron for given weights
+
+import numpy as np
+
+class Perceptron:
+    def __init__(self, N, alpha=0.1):
+        self.W =[-0.2,0.2,0.3]
+        self.alpha = alpha
+        print("Initial weight : ",self.W)
+        
+    def step(self, X):
+        return 1 if X > 0 else 0
+    
+    def fit(self, X, y , epochs = 10):
+        X=np.c_[np.ones((X.shape[0])), X]
+        #print(X)
+        for epoch in np.arange(0, epochs):
+            for (x, target) in zip(X,y):
+                p=self.step(np.dot(x, self.W))
+                print(p, target)
+                if p!=target:
+                    error=p-target
+                    self.W += - self.alpha * error * x
+                print(self.W)
+                    
+    def predict(self, X, addBias=True):
+        X = np.atleast_2d(X)
+        if addBias:
+            X = np.c_[np.ones((X.shape[0])), X]
+        return self.step(np.dot(X, self.W))
+
+import numpy as np
+# construct the OR dataset
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y = np.array([[0], [1], [1], [1]])
+# define our perceptron and train it
+print("[INFO] training perceptron...")
+p = Perceptron(X.shape[1], alpha=0.1)
+p.fit(X, y, epochs=2)
+
+print("[INFO] testing perceptron...")
+# now that our network is trained, loop over the data points
+for (x, target) in zip(X, y):
+    pred = p.predict(x)
+    print("[INFO] data={}, ground-truth={}, pred={}".format(x, target[0], pred))
+
+print(p.W)
+
+
+
+#4b bias -0.5
+
+#OR Single Layer Perceptron
+
+import numpy as np
+
+class Perceptron:
+    def __init__(self, N, alpha=0.1):
+        self.W =[-0.5,1,1]
+        self.alpha = alpha
+        print("Initial weight : ",self.W)
+        
+    def step(self, X):
+        return 1 if X > 0 else 0
+    
+    def fit(self, X, y , epochs = 10):
+        X=np.c_[np.ones((X.shape[0])), X]
+        
+        for epoch in np.arange(0, epochs):
+            for (x, target) in zip(X,y):
+                p=self.step(np.dot(x, self.W))
+                if p!=target:
+                    error=p-target
+                    self.W += - self.alpha * error * x
+                    print(self.W)
+                    
+    def predict(self, X, addBias=True):
+        X = np.atleast_2d(X)
+        if addBias:
+            X = np.c_[np.ones((X.shape[0])), X]
+        print(np.dot(X, self.W))
+        return self.step(np.dot(X, self.W))
+
+import numpy as np
+# construct the OR dataset
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y = np.array([[0], [1], [1], [1]])
+# define our perceptron and train it
+print("[INFO] training perceptron...")
+p = Perceptron(X.shape[1], alpha=0.1)
+p.fit(X, y, epochs=20)
+
+print("[INFO] testing perceptron...")
+# now that our network is trained, loop over the data points
+for (x, target) in zip(X, y):
+    pred = p.predict(x)
+    print("[INFO] data={}, ground-truth={}, pred={}".format(x, target[0], pred))
+
+print(p.W)
+
+
+
+#4a bias -1.5
+
+import numpy as np
+
+class Perceptron:
+    def __init__(self, N, alpha=0.1):
+        self.W =[-1.5,1,1]
+        self.alpha = alpha
+        print("Initial weight : ",self.W)
+        
+    def step(self, X):
+        return 1 if X > 0 else 0
+    
+    def fit(self, X, y , epochs = 10):
+        X=np.c_[np.ones((X.shape[0])), X]
+        
+        for epoch in np.arange(0, epochs):
+            for (x, target) in zip(X,y):
+                p=self.step(np.dot(x, self.W))
+                if p!=target:
+                    error=p-target
+                    self.W += - self.alpha * error * x
+                    
+    def predict(self, X, addBias=True):
+        X = np.atleast_2d(X)
+        if addBias:
+            X = np.c_[np.ones((X.shape[0])), X]
+        print(np.dot(X, self.W))
+        return self.step(np.dot(X, self.W))
+
+import numpy as np
+# construct the AND dataset
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y = np.array([[0], [0], [0], [1]])
+# define our perceptron and train it
+print("[INFO] training perceptron...")
+p = Perceptron(X.shape[1], alpha=0.1)
+#p.fit(X, y, epochs=20)
+
+print("[INFO] testing perceptron...")
+# now that our network is trained, loop over the data points
+for (x, target) in zip(X, y):
+    pred = p.predict(x)
+    print("[INFO] data={}, ground-truth={}, pred={}".format(x, target[0], pred))
+
+print(p.W)
+
+#6)
+
+#XORMultiLayer Perceptron
+
+import numpy as np
+
+def sigmoid(x):
+	return 1.0/(1.0 + np.exp(-x))
+
+def sigmoid_der(x):
+	return x*(1.0 - x)
+
+class NN:
+    def __init__(self, inputs):
+        self.inputs = inputs
+        self.l=len(self.inputs)
+        self.li=len(self.inputs[0])
+
+        self.wi=[0.5,0.7,-0.6,1,1,1]
+        self.wh=[-0.5,-1,1]
+
+    def think(self, inp):
+        s1=sigmoid(np.dot(inp, self.wi))
+        s2=sigmoid(np.dot(s1, self.wh))
+        return s2
+
+    def train(self, inputs, it):
+        for i in range(it):
+            l0=np.c_[np.ones((inputs.shape[0])), inputs]
+            l1=sigmoid(np.dot(l0, self.wi[0:3]))
+            l2=sigmoid(np.dot(l0, self.wi[3:6]))
+            l4=(1.0/(1.0 + np.exp(np.dot([1,l1[0],l2[0]],self.wh))))
+            print("a1 = ",l1,"a2 = ",l2,"Output = ",l4)
+            if(l4<=0.5):
+                print("Class: 0")
+            else:
+                print("Class: 1")
+
+inputs=np.array([[0,0]])
+#outputs=np.array([ [0], [1],[1],[0] ])
+
+n=NN(inputs)
+n.train(inputs,1)
+
+inputs=np.array([[1,1]])
+#outputs=np.array([ [0], [1],[1],[0] ])
+
+n=NN(inputs)
+n.train(inputs,1)
+
+================================================================
+MLP-1
+
+import numpy as np
+
+def sigmoid(x):
+	return 1.0/(1.0 + np.exp(-x))
+
+def sigmoid_der(x):
+	return x*(1.0 - x)
+
+class NN:
+    def __init__(self, inputs):
+        self.inputs = inputs
+        self.l=len(self.inputs)
+        self.li=len(self.inputs[0])
+
+        self.wi=np.random.random((self.li, self.l))
+        self.wh=np.random.random((self.l, 1))
+
+    def think(self, inp):
+        s1=sigmoid(np.dot(inp, self.wi))
+        s2=sigmoid(np.dot(s1, self.wh))
+        return s2
+
+    def train(self, inputs,outputs, it):
+        for i in range(it):
+            l0=inputs
+            l1=sigmoid(np.dot(l0, self.wi))
+            l2=sigmoid(np.dot(l1, self.wh))
+
+            l2_err=outputs - l2
+            l2_delta = np.multiply(l2_err, sigmoid_der(l2))
+
+            l1_err=np.dot(l2_delta, self.wh.T)
+            l1_delta=np.multiply(l1_err, sigmoid_der(l1))
+
+            self.wh+=np.dot(l1.T, l2_delta)
+            self.wi+=np.dot(l0.T, l1_delta)
+
+inputs=np.array([[0,0], [0,1], [1,0], [1,1] ])
+outputs=np.array([ [0], [1],[1],[0] ])
+
+n=NN(inputs)
+print(n.think(inputs))
+n.train(inputs, outputs, 10000)
+print("\n")
+print(n.think(inputs))
+
+#MLP_back
+
+import numpy as np
+
+def sigmoid(x):
+  return 1 / (1 + np.exp(-x))
+
+def derivative_sigmoid(x):
+  return sigmoid(x) * (1 - sigmoid(x))
+
+class NeuralNetwork:
+  def __init__(self, input_size, hidden_size, output_size, learning_rate):
+    self.input_size = input_size
+    self.hidden_size = hidden_size
+    self.output_size = output_size
+    self.learning_rate = learning_rate
+
+    
+    self.weights1 = np.array([[0.1, 0.4], [0.8, 0.6]])
+    self.weights2 = np.array([[0.3], [0.9]])
+
+  def forward_pass(self, X):
+    hidden_layer_activation = sigmoid(np.dot(X, self.weights1))
+    output_layer_activation = sigmoid(np.dot(hidden_layer_activation, self.weights2))
+    return hidden_layer_activation, output_layer_activation
+
+  def backward_pass(self, X, y, hidden_layer_activation, output_layer_activation):
+    output_error = output_layer_activation - y
+    output_delta = output_error * derivative_sigmoid(output_layer_activation)
+    hidden_error = np.dot(output_delta, self.weights2.T) * derivative_sigmoid(hidden_layer_activation)
+    weights1_gradient = np.dot(X.T, hidden_error)
+    weights2_gradient = np.dot(hidden_layer_activation.T, output_delta)
+    return weights1_gradient, weights2_gradient
+
+  def update_weights(self, weights1_gradient, weights2_gradient):
+    self.weights1 -= self.learning_rate * weights1_gradient
+    self.weights2 -= self.learning_rate * weights2_gradient
+
+  def train(self, X, y, epochs):
+    for epoch in range(epochs):
+      hidden_layer_activation, output_layer_activation = self.forward_pass(X)
+      weights1_gradient, weights2_gradient = self.backward_pass(X, y, hidden_layer_activation, output_layer_activation)
+      self.update_weights(weights1_gradient, weights2_gradient)
+
+      
+      print(f"Epoch {epoch+1}:")
+      print(f"Weights1: {self.weights1}")
+      print(f"Weights2: {self.weights2}")
+      print("\n")
+
+
+nn = NeuralNetwork(2, 2, 1, 0.1)  # 2 inputs, 2 hidden neurons, 1 output
+
+
+input_data = np.array([0.35, 0.9])
+target_output = 0.5
+
+nn.train(input_data.reshape(1, 2), target_output, 2) 
+
+
+=========================================================
+
+#Linear_reg
+
+
+import numpy as np
+import pandas as pd
+X = [1,2,3,4,5]
+y = [1.2,1.8,2.6,3.2,3.8]
+X = np.array(X)
+y = np.array(y)
+import warnings
+warnings.filterwarnings('ignore')
+df = pd.DataFrame({'Week': X,'Sales': y})
+df.to_csv('sales_per_week.csv',index=False)
+sdf = pd.read_csv('sales_per_week.csv')
+sdf.head()
+from sklearn.linear_model import LinearRegression,LogisticRegression
+from sklearn.model_selection import train_test_split
+lr = LinearRegression()
+sX = sdf[['Week']]
+sy = sdf['Sales']
+lr.fit(sX,sy)
+print(lr.predict([[7]])[0])
+
+print(lr.predict([[12]])[0])
+
+#logistic regression
+hX = np.array([29,15,33,28,39])
+hy = np.array([0,0,1,1,1])
+logr = LogisticRegression(random_state=0)
+hdf = pd.DataFrame({'Hours': hX, 'Result': hy})
+hdf.to_csv('hours_result.csv',index=False)
+hdf.head()
+datf = pd.read_csv('hours_result.csv')
+X_train = datf[['Hours']]
+y_train = datf['Result']
+logr.fit(X_train,y_train)
+logr.score(X_train,y_train)
+logr.predict([[33]])[0]
+from scipy.optimize import fsolve
+# Define the logistic function
+def logistic_function(hours):
+    log_odds = -64 + 2 * hours
+    return 1 / (1 + np.exp(-log_odds))
+
+# Function to find the hours for passing probability greater than 95%
+def find_hours(prob_threshold):
+    def equation(hours):
+        return logistic_function(hours) - prob_threshold
+    # Initial guess for hours
+    initial_guess = 0
+    # Solve the equation
+    hours_solution = fsolve(equation, initial_guess)
+    return hours_solution[0]
+
+passing_prob_threshold = 0.95
+hours_needed = find_hours(passing_prob_threshold)
+print(hours_needed)
+
+#reg_2
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+dataset = pd.read_csv('studentscores.csv')
+X = dataset.iloc[ : ,   : 1 ].values
+Y = dataset.iloc[ : , 1 ].values
+
+from sklearn.cross_validation import train_test_split
+X_train, X_test, Y_train, Y_test = train_test_split( X, Y, test_size = 1/4, random_state = 0) 
+from sklearn.linear_model import LinearRegression
+regressor = LinearRegression()
+regressor = regressor.fit(X_train, Y_train)
+
+Y_pred = regressor.predict(X_test)
+plt.scatter(X_train , Y_train, color = 'red')
+plt.plot(X_train , regressor.predict(X_train), color ='blue')
+plt.scatter(X_test , Y_test, color = 'red')
+plt.plot(X_test , regressor.predict(X_test), color ='blue')
+===============================================
+#PCA
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+data = pd.read_csv("./wine.csv")
+
+data.head(10)
+Inputs = data.iloc[:,1:14]
+
+Label = data.iloc[:,0]
+
+Scaler = StandardScaler()
+
+x1 = Scaler.fit(Inputs)
+x2 = x1.transform(Inputs)
+
+Inputs.count
+
+pca = PCA()
+
+proj = pca.fit_transform(x2)
+
+# print(pca.explained_variance_)
+# print(pca.explained_variance_ratio_) 
+
+print(pca.components_)
+
+var = np.sum(pca.explained_variance_[0:2])
+print(var)
+var_percentage = np.sum(pca.explained_variance_ratio_[0:2])*100
+print(var_percentage,'%')
+exp_var_ratio = pca.explained_variance_ratio_
+
+print('Explained Variance Ratios:')
+for i, ratio in enumerate(exp_var_ratio):
+    print(f'PC{i+1}: {ratio*100:.2f}%')
+print('\nFeature Importance:')
+
+for i, col in enumerate(Inputs.columns):
+    print(f'{col}: {pca.components_[0][i]:.2f}')
+figure = plt.figure()
+ax = plt.gca()
+plt.scatter(proj[:,0],proj[:,1], c=Label, edgecolor='none', alpha=0.5)
+ax.set_title("The PCA plot")
+ax.set_xlabel("The first principle component")
+ax.set_ylabel("The second principle component")
+
+============================================
+#Decision_tree
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+from sklearn.datasets import load_iris
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.tree import DecisionTreeClassifier
+
+# Importing required packages for visualization
+from IPython.display import Image  
+from six import StringIO 
+from sklearn.tree import export_graphviz
+import graphviz
+
+import warnings
+warnings.filterwarnings("ignore")
+
+iris = pd.read_csv("iris.csv")
+iris
+
+
+classes = iris['classes'].unique().tolist()
+classes
+
+# Putting feature variable to X
+X = iris.drop('classes',axis=1)
+
+# Putting response variable to y
+y = iris['classes']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, 
+                                                    test_size=0.30, 
+                                                    random_state = 99)
+X_train.head()
+
+dt_iris = DecisionTreeClassifier()
+dt_iris.fit(X_train, y_train)
+
+y_pred_train = dt_iris.predict(X_train)
+
+print(classification_report(y_train, y_pred_train))
+print(confusion_matrix(y_train,y_pred_train))
+print(accuracy_score(y_train,y_pred_train))
+y_pred_default = dt_iris.predict(X_test)
+
+print(classification_report(y_test, y_pred_default))
+
+print(confusion_matrix(y_test,y_pred_default))
+print(accuracy_score(y_test,y_pred_default))
+
+!pip install  pydotplus
+
+import pydotplus
+features = list(X_train.columns)
+dot_data = StringIO()  
+export_graphviz(dt_iris, out_file=dot_data,
+                feature_names=features, filled=True,rounded=True)
+
+graph = pydotplus.graph_from_dot_data(dot_data.getvalue())  
+Image(graph.create_png())
+
+y_pred_default = dt_iris.predict([[5.2,3.1,1.4,0.2]])
+
+y_pred_default
+
+================================================
+#KNN
+
+%matplotlib inline
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+
+
+
+iris = load_iris()
+iris.data
+print(iris.feature_names)
+print(iris.target_names)
+plt.scatter(iris.data[:,1],iris.data[:,2],c=iris.target, cmap=plt.cm.Paired)
+plt.xlabel(iris.feature_names[1])
+plt.ylabel(iris.feature_names[2])
+plt.show()
+
+plt.scatter(iris.data[:,0],iris.data[:,3],c=iris.target, cmap=plt.cm.Paired)
+plt.xlabel(iris.feature_names[0])
+plt.ylabel(iris.feature_names[3])
+plt.show()
+
+p = iris.data
+q = iris.target
+from sklearn.model_selection import train_test_split
+p_train,p_test,q_train,q_test = train_test_split(p,q,test_size=0.2,random_state=4)
+
+from sklearn.neighbors import KNeighborsClassifier
+
+from sklearn import metrics
+
+k_range = range(1,26)
+scores = {}
+scores_list = []
+for k in k_range:
+        knn = KNeighborsClassifier(n_neighbors=k)
+        knn.fit(p_train,q_train)
+        q_pred=knn.predict(p_test)
+        scores[k] = metrics.accuracy_score(q_test,q_pred)
+        scores_list.append(metrics.accuracy_score(q_test,q_pred))
+        
+scores
+plt.plot(k_range,scores_list)
+plt.xlabel('Value of K for KNN')
+plt.ylabel('Testing Accuracy')
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(p,q)
+#0 = setosa, 1=versicolor, 2=virginica
+classes = {0:'setosa',1:'versicolor',2:'virginica'}
+
+
+x_new = [[5.2,3.1,1.4,0.2]]
+y_predict = knn.predict(x_new)
+
+print(classes[y_predict[0]])
+
+============================================
+
+#KNN-2
+
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+
+# Define the dataset
+data = {
+    'Record': [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    'Age': [22, 33, 28, 51, 25, 39, 54, 55, 50],
+    'Marital': ['Single', 'Married', 'Other', 'Other', 'Single', 'Single', 'Single', 'Married', 'Married'],
+    'Income': ['$46,156.98', '$24,188.10', '$28,787.34', '$23,886.72', '$47,281.44', '$33,994.90', '$28,716.50', '$49,186.75', '$46,726.50'],
+    'Risk': ['Bad loss', 'Bad loss', 'Bad loss', 'Bad loss', 'Bad loss', 'Good risk', 'Good risk', 'Good risk', 'Good risk']
+}
+
+# Convert to DataFrame
+df = pd.DataFrame(data)
+
+# Convert Income to numeric
+df['Income'] = df['Income'].replace('[\$,]', '', regex=True).astype(float)
+
+# Encode categorical variables
+label_encoder = LabelEncoder()
+df['Marital'] = label_encoder.fit_transform(df['Marital'])
+df['Risk'] = label_encoder.fit_transform(df['Risk'])
+
+# Feature scaling
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(df[['Age', 'Income']])
+
+# Training the model
+knn_model = KNeighborsClassifier(n_neighbors=3)  # You can adjust the number of neighbors as needed
+knn_model.fit(scaled_features, df['Risk'])
+
+# Encoding the marital status of the new record
+marital_mapping = {'Single': 0, 'Married': 1, 'Other': 2}  # Mapping of marital status to numerical values
+new_marital_encoded = marital_mapping['Married']
+
+# Scale the new record's features
+new_age = 66
+new_income = 36120.34
+scaled_new_record = scaler.transform([[new_age, new_income]])
+
+# Predicting for the new record
+prediction = knn_model.predict(scaled_new_record)
+
+# Map the prediction back to original label
+predicted_risk = label_encoder.inverse_transform(prediction)[0]
+
+print("Predicted Risk for the new record:", predicted_risk)
+
+
+========================================================
+#Random_forest
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.filterwarnings("ignore")
+loan_data = pd.read_csv('./loan_data_set.csv')
+loan_data.head(5)
+loan_data.info()
+# Gender Column
+loan_data['Gender'] =  loan_data['Gender'].map({'Male':0,'Female':1})
+
+# Married column
+loan_data['Married'] = loan_data['Married'].map({'No':0,'Yes':1})
+
+# Loan_Status column
+loan_data['Loan_Status']=loan_data['Loan_Status'].map({'N':0,'Y':1})
+
+loan_data['Gender'] = loan_data['Gender'].fillna(loan_data['Gender'].mode()[0])
+loan_data['Married'] = loan_data['Married'].fillna(loan_data['Married'].mode()[0])
+loan_data['Dependents'] = loan_data['Dependents'].fillna(loan_data['Dependents'].mode()[0])
+loan_data['S    elf_Employed'].fillna('No',inplace=True)
+loan_data['Credit_History'] = loan_data['Credit_History'].fillna(loan_data['Credit_History'].mode()[0])
+loan_data['LoanAmount'] = loan_data['LoanAmount'].fillna(loan_data['LoanAmount'].median())
+loan_data['Loan_Amount_Term'] = loan_data['Loan_Amount_Term'].fillna(loan_data['Loan_Amount_Term'].mode()[0])
+X = loan_data[['Gender', 'Married', 'ApplicantIncome', 'LoanAmount',
+'Credit_History']]
+y = loan_data.Loan_Status
+from sklearn.model_selection import train_test_split
+x_train, x_cv, y_train, y_cv = train_test_split(X,y, test_size = 0.2,random_state = 10)
+from sklearn.tree import DecisionTreeClassifier
+decision_tree = DecisionTreeClassifier()
+decision_tree.fit(x_train, y_train)
+
+import graphviz
+from sklearn.tree import  export_graphviz
+
+dot_data = export_graphviz(decision_tree, out_file=None, 
+                           feature_names=x_train.columns,  
+                           class_names=['N','Y'],  
+                           filled=True, rounded=True,  
+                           special_characters=True)
+
+# Visualize the decision tree
+graph = graphviz.Source(dot_data)
+graph.render("decision_tree")
+
+# Alternatively, you can save the decision tree as a PNG image directly
+graph.format = 'png'
+graph.render("decision_tree")
+
+from sklearn.ensemble import RandomForestClassifier,BaggingClassifier,AdaBoostClassifier
+
+random_forest = RandomForestClassifier()
+random_forest.fit(x_train, y_train)
+
+bagging = BaggingClassifier(base_estimator=DecisionTreeClassifier(), n_estimators=50, random_state=42)
+bagging.fit(x_train, y_train)
+
+# Adaboost
+adaboost = AdaBoostClassifier(base_estimator=DecisionTreeClassifier(max_depth=1), n_estimators=50, random_state=42)
+adaboost.fit(x_train, y_train)
+
+dt_pred = decision_tree.predict(x_cv)
+rf_pred = random_forest.predict(x_cv)
+bagging_pred = bagging.predict(x_cv)
+adaboost_pred = adaboost.predict(x_cv)
+
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+dt_accuracy = accuracy_score(y_cv, dt_pred)
+rf_accuracy = accuracy_score(y_cv, rf_pred)
+bagging_accuracy = accuracy_score(y_cv, bagging_pred)
+adaboost_accuracy = accuracy_score(y_cv, adaboost_pred)
+
+from sklearn.ensemble import RandomForestClassifier
+model = RandomForestClassifier(max_depth=4, random_state = 10)
+model.fit(x_train, y_train)
+dt_confusion_matrix = confusion_matrix(y_cv, dt_pred)
+rf_confusion_matrix = confusion_matrix(y_cv, rf_pred)
+bagging_confusion_matrix = confusion_matrix(y_cv, bagging_pred)
+adaboost_confusion_matrix = confusion_matrix(y_cv, adaboost_pred)
+
+print("Decision Tree Accuracy:", dt_accuracy)
+print("Random Forest Accuracy:", rf_accuracy)
+print("Bagging Accuracy:", bagging_accuracy)
+print("Adaboost Accuracy:", adaboost_accuracy)
+
+print("\nDecision Tree Confusion Matrix:")
+print(dt_confusion_matrix)
+print("\nRandom Forest Confusion Matrix:")
+print(rf_confusion_matrix)
+print("\nBagging Confusion Matrix:")
+print(bagging_confusion_matrix)
+print("\nAdaboost Confusion Matrix:")
+print(adaboost_confusion_matrix)
+
+from sklearn.metrics import accuracy_score
+pred_cv = model.predict(x_cv)
+accuracy_score(y_cv,pred_cv)
+pred_train = model.predict(x_train)
+print("Accuracy: ",accuracy_score(y_train,pred_train))
+
+==============================================================
+
+#SVM
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import datasets
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.preprocessing import StandardScaler
+
+# Load the dataset
+iris = datasets.load_iris()
+X = iris.data
+y = iris.target
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Feature scaling
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Linear kernel SVM
+linear_svm = SVC(kernel='linear')
+linear_svm.fit(X_train_scaled, y_train)
+linear_svm_pred = linear_svm.predict(X_test_scaled)
+linear_accuracy = accuracy_score(y_test, linear_svm_pred)
+print("Linear SVM Accuracy:", linear_accuracy)
+
+# RBF kernel SVM
+rbf_svm = SVC(kernel='rbf')
+rbf_svm.fit(X_train_scaled, y_train)
+rbf_svm_pred = rbf_svm.predict(X_test_scaled)
+rbf_accuracy = accuracy_score(y_test, rbf_svm_pred)
+print("RBF SVM Accuracy:", rbf_accuracy)
+
+# Gaussian kernel SVM
+gaussian_svm = SVC(kernel='sigmoid')
+gaussian_svm.fit(X_train_scaled, y_train)
+gaussian_svm_pred = gaussian_svm.predict(X_test_scaled)
+gaussian_accuracy = accuracy_score(y_test, gaussian_svm_pred)
+print("Gaussian SVM Accuracy:", gaussian_accuracy)
+
+# Confusion matrices
+linear_conf_matrix = confusion_matrix(y_test, linear_svm_pred)
+rbf_conf_matrix = confusion_matrix(y_test, rbf_svm_pred)
+gaussian_conf_matrix = confusion_matrix(y_test, gaussian_svm_pred)
+
+print("\nConfusion Matrix (Linear SVM):")
+print(linear_conf_matrix)
+print("\nConfusion Matrix (RBF SVM):")
+print(rbf_conf_matrix)
+print("\nConfusion Matrix (Gaussian SVM):")
+print(gaussian_conf_matrix)
+
+
+models = ['Linear SVM', 'RBF SVM', 'Gaussian SVM']
+accuracies = [linear_accuracy, rbf_accuracy, gaussian_accuracy]
+
+plt.bar(models, accuracies, color=['blue', 'green', 'red'])
+plt.xlabel('SVM Models')
+plt.ylabel('Accuracy')
+plt.title('Accuracy Comparison of SVM Models')
+plt.ylim(0.9, 1.0) 
+plt.show()
+
+=========================================================
